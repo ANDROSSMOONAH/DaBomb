@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>ZIM Template - Da Bomb!</title> 
+
+<script>var zon = true; // true for comments from zim code</script>
+<script src="http://d309knd7es5f10.cloudfront.net/zim_1.4_min.js"></script><!-- take off _min to see code -->
+<script src="http://code.createjs.com/createjs-2014.12.12.min.js"></script> 
+<!-- or can go to zimjs.com and createjs.coms for individual modules -->
+
+<script src="js/view_h_v.js"></script>
+<script src="js/controler.js"></script>
+
+<style>
+	body {margin:0px; padding:0px; background-color:#000;}
+	#myCanvas {position:absolute; background-color:#D1A170;}
+</style>
+
+<script>
+
+// SCALING OPTIONS
+// "none"		sets canvas and stage to dimensions and does not scale if window changes
+// "fit"		sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"	sets canvas and stage to dimensions and scales to fit outside window size
+// "full"		sets canvas and stage to window size (canvas is actually set to screen size)
+
+var scaling = "full"; // full automatically sets width and height to window size
+var width = null;
+var height = null;
+var frame = new zim.Frame(scaling, width, height); 
+var stage;
+var stageW;
+var stageH;
+
+
+frame.on("ready", function() {	
+	zog("ready from ZIM Frame");
+
+	stage = frame.stage;
+	stageW = frame.stageW;
+	stageH = frame.stageH;
+
+	// handle asset loading and call main app function when complete
+	var contentPath = "content/";
+	var manifest = [{src:"DaBomb1.png", id:"bomb1"},{src:"DaBomb2.png", id:"bomb2"},{src:"DaBomb3.png", id:"bomb3"},{src:"DaBomb4.png", id:"bomb4"}]; // array of objects
+	var preload = new createjs.LoadQueue(false, contentPath); // use true if on the same server	
+	//preload.installPlugin(createjs.Sound); // sound requires this plugin call (comment out if no sound)
+	preload.on("progress", animateProgress); // this will update the progress (optional)
+	preload.on("complete", daBomb);	 // call the main code when ready	
+	preload.loadManifest(manifest);
+	
+	var waiter = new zim.Waiter(stage);
+	waiter.show();
+	
+	// make a preloader first and animate it below
+	function animateProgress(e) {
+		// zog("progress " + e.target.progress);	
+		// the progress property gives a number from 0-1 representing progress
+	}
+
+	function daBomb() {
+
+		var vLayoutManager = new zim.LayoutManager();
+		var gridManager = new zim.GridManager();
+		var guideManager = new zim.GuideManager();
+
+		var vP = app.makeVerticalPages(preload, vLayoutManager, gridManager, guideManager);
+
+		// stage.addChild(hP.main);
+		// stage.addChild(hP.info);
+		// hP.info.x = 100;
+
+		var vPages = new zim.Pages(stage,[
+			{page:vP.main,  swipe:[vP.info, vP.info, vP.info, vP.info]},
+			{page:vP.info,  swipe:[vP.main, vP.main, vP.main, vP.main]}
+		], "slide", 500
+		);
+		stage.addChild(vPages);
+		
+		//vLayoutManager.dispose();
+		//gridManager.dispose();
+		//guideManager.dispose();
+
+		// put resizing code in here (scaling="full" only)
+		frame.on("resize", function(e) {
+			stageW = frame.stageW;
+			stageH = frame.stageH;
+
+			zim.scaleTo(vP.info,stage,100,100,"both");
+
+			vLayoutManager.resize();
+			gridManager.resize();
+			guideManager.resize();
+
+			stage.update();
+		}); // end of resizing
+		
+
+		// put orientation change code in here
+		frame.on("orientation", orientate);
+
+			function orientate(e){
+
+				console.log(frame.orientation);
+
+				
+			stage.update();
+		}// end of orientation
+		
+		orientate();
+
+		stage.update();	
+
+	}
+	
+}); // end of ready
+
+</script>
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>
